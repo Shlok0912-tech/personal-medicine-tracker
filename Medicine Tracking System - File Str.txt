@@ -1,0 +1,230 @@
+Medicine Tracking System - File Structure
+Project Directory Structure
+medicine-tracker/
+├── index.html                          # Main application entry point
+├── manifest.json                       # PWA manifest file
+├── service-worker.js                   # Service worker for offline functionality
+├── 
+├── assets/                             # Static assets
+│   ├── icons/                          # Application icons
+│   │   ├── icon-192x192.png
+│   │   ├── icon-512x512.png
+│   │   └── favicon.ico
+│   ├── images/                         # UI images and illustrations
+│   │   ├── medicine-icons/             # Medicine type icons
+│   │   ├── dashboard-bg.svg
+│   │   └── empty-state.svg
+│   └── fonts/                          # Custom fonts (if needed)
+│
+├── css/                                # Stylesheets
+│   ├── main.css                        # Main application styles
+│   ├── components/                     # Component-specific styles
+│   │   ├── dashboard.css
+│   │   ├── medicine-form.css
+│   │   ├── stock-tracker.css
+│   │   ├── administration-log.css
+│   │   ├── glucose-tracker.css
+│   │   ├── reports.css
+│   │   └── settings.css
+│   ├── utilities/                      # Utility classes
+│   │   ├── layout.css
+│   │   ├── typography.css
+│   │   └── animations.css
+│   └── themes/                         # Theme variations
+│       ├── light-theme.css
+│       └── dark-theme.css
+│
+├── js/                                 # JavaScript modules
+│   ├── app.js                          # Main application entry point
+│   ├── config/                         # Configuration files
+│   │   ├── constants.js                # Application constants
+│   │   ├── storage-config.js           # Storage configuration
+│   │   └── notification-config.js      # Notification settings
+│   │
+│   ├── models/                         # Data models
+│   │   ├── Medicine.js                 # Medicine entity model
+│   │   ├── StockRecord.js              # Stock record model
+│   │   ├── AdministrationLog.js        # Administration log model
+│   │   ├── GlucoseReading.js           # Glucose reading model
+│   │   └── ValidationResult.js         # Validation result model
+│   │
+│   ├── services/                       # Business logic services
+│   │   ├── LocalStorageService.js      # LocalStorage management
+│   │   ├── MedicineService.js          # Medicine CRUD operations
+│   │   ├── StockService.js             # Stock management
+│   │   ├── AdministrationService.js    # Administration logging
+│   │   ├── GlucoseService.js           # Glucose tracking
+│   │   ├── NotificationService.js      # Notification management
+│   │   ├── ReportService.js            # Report generation
+│   │   ├── BackupService.js            # Data backup/restore
+│   │   └── ValidationService.js        # Data validation
+│   │
+│   ├── components/                     # UI components
+│   │   ├── Dashboard.js                # Main dashboard component
+│   │   ├── MedicineManager.js          # Medicine management UI
+│   │   ├── StockTracker.js             # Stock tracking UI
+│   │   ├── AdministrationLogger.js     # Administration logging UI
+│   │   ├── GlucoseTracker.js           # Glucose tracking UI
+│   │   ├── ReportsPanel.js             # Reports and analytics UI
+│   │   ├── SettingsPanel.js            # Settings and preferences UI
+│   │   ├── NotificationPanel.js        # Notification management UI
+│   │   └── common/                     # Reusable UI components
+│   │       ├── Modal.js                # Modal dialog component
+│   │       ├── DatePicker.js           # Date picker component
+│   │       ├── Chart.js                # Chart visualization component
+│   │       ├── DataTable.js            # Data table component
+│   │       ├── SearchBox.js            # Search functionality
+│   │       ├── Pagination.js           # Pagination component
+│   │       └── LoadingSpinner.js       # Loading indicator
+│   │
+│   ├── utils/                          # Utility functions
+│   │   ├── dateUtils.js                # Date manipulation utilities
+│   │   ├── formatUtils.js              # Data formatting utilities
+│   │   ├── validationUtils.js          # Validation helper functions
+│   │   ├── exportUtils.js              # Data export utilities
+│   │   ├── encryptionUtils.js          # Client-side encryption
+│   │   ├── chartUtils.js               # Chart generation utilities
+│   │   └── domUtils.js                 # DOM manipulation utilities
+│   │
+│   ├── controllers/                    # Application controllers
+│   │   ├── AppController.js            # Main application controller
+│   │   ├── DashboardController.js      # Dashboard logic controller
+│   │   ├── MedicineController.js       # Medicine management controller
+│   │   ├── StockController.js          # Stock management controller
+│   │   ├── AdministrationController.js # Administration controller
+│   │   ├── GlucoseController.js        # Glucose tracking controller
+│   │   ├── ReportsController.js        # Reports controller
+│   │   └── SettingsController.js       # Settings controller
+│   │
+│   └── workers/                        # Web workers for background tasks
+│       ├── data-processor.js           # Data processing worker
+│       ├── backup-worker.js            # Backup processing worker
+│       └── report-generator.js         # Report generation worker
+│
+├── templates/                          # HTML templates
+│   ├── dashboard.html                  # Dashboard template
+│   ├── medicine-form.html              # Medicine form template
+│   ├── stock-tracker.html              # Stock tracker template
+│   ├── administration-log.html         # Administration log template
+│   ├── glucose-tracker.html            # Glucose tracker template
+│   ├── reports.html                    # Reports template
+│   ├── settings.html                   # Settings template
+│   └── partials/                       # Partial templates
+│       ├── medicine-card.html          # Medicine card partial
+│       ├── stock-item.html             # Stock item partial
+│       ├── admin-log-entry.html        # Administration log entry
+│       ├── glucose-reading.html        # Glucose reading partial
+│       └── notification-item.html      # Notification item partial
+│
+├── data/                               # Sample and reference data
+│   ├── sample-medicines.json           # Sample medicine data
+│   ├── medicine-categories.json        # Medicine category reference
+│   ├── dosage-forms.json              # Dosage form reference
+│   └── glucose-ranges.json            # Normal glucose ranges reference
+│
+├── tests/                              # Test files
+│   ├── unit/                           # Unit tests
+│   │   ├── models/                     # Model tests
+│   │   ├── services/                   # Service tests
+│   │   ├── components/                 # Component tests
+│   │   └── utils/                      # Utility tests
+│   ├── integration/                    # Integration tests
+│   │   ├── storage-tests.js            # Storage integration tests
+│   │   ├── workflow-tests.js           # User workflow tests
+│   │   └── data-flow-tests.js          # Data flow tests
+│   └── e2e/                            # End-to-end tests
+│       ├── user-scenarios.js           # User scenario tests
+│       └── accessibility-tests.js      # Accessibility tests
+│
+├── docs/                               # Documentation
+│   ├── api-documentation.md            # API documentation
+│   ├── user-guide.md                   # User guide
+│   ├── developer-guide.md              # Developer setup guide
+│   ├── deployment-guide.md             # Deployment instructions
+│   └── architecture-diagrams/          # Architecture diagrams
+│       ├── system-architecture.png
+│       ├── data-flow-diagram.png
+│       └── ui-navigation-flow.png
+│
+├── build/                              # Build configuration
+│   ├── webpack.config.js               # Webpack configuration
+│   ├── babel.config.js                 # Babel configuration
+│   └── postcss.config.js               # PostCSS configuration
+│
+├── .gitignore                          # Git ignore rules
+├── package.json                        # NPM package configuration
+├── README.md                           # Project README
+└── LICENSE                             # Project license
+Key File Descriptions
+Core Application Files
+index.html
+
+Main HTML entry point with basic structure
+Links to CSS and JavaScript files
+Contains root DOM element for the application
+Includes PWA meta tags and manifest link
+app.js
+
+Application initialization and routing
+Service registration and startup logic
+Global error handling and logging
+Module loading and dependency injection
+service-worker.js
+
+Offline functionality implementation
+Cache management for static assets
+Background sync for data operations
+Push notification handling
+Model Files
+Medicine.js
+
+Complete medicine entity with validation
+Stock level management methods
+JSON serialization/deserialization
+Business logic for medicine operations
+AdministrationLog.js
+
+Administration event tracking
+Adherence calculation methods
+Stock impact calculation
+Timestamp and scheduling logic
+Service Files
+LocalStorageService.js
+
+Core storage abstraction layer
+Data encryption and decryption
+Storage quota management
+Data integrity validation
+MedicineService.js
+
+Medicine CRUD operations
+Search and filtering functionality
+Stock integration methods
+Validation and business rules
+Component Files
+Dashboard.js
+
+Main dashboard UI component
+Widget management and layout
+Real-time data updates
+Quick action implementations
+MedicineManager.js
+
+Medicine form handling
+Validation and error display
+Auto-complete and search features
+Bulk operations support
+Configuration Files
+constants.js
+
+Application-wide constants
+Storage keys and prefixes
+Default values and settings
+API endpoints (if applicable)
+storage-config.js
+
+Storage schema definitions
+Migration scripts for data updates
+Backup and restore configurations
+Data retention policies
+This file structure provides a scalable, maintainable architecture that separates concerns effectively while supporting future enhancements and team collaboration.

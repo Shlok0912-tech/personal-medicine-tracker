@@ -1,0 +1,213 @@
+Product Requirements Document (PRD)
+Personal Medicine & Glucose Tracking Website
+1. Language & Project Information
+Language: English
+Programming Language: Shadcn-ui, TypeScript, and Tailwind CSS
+Project Name: medicine_glucose_tracker
+Original Requirements: Create a personal medicine tracking website that can track individual tablets, log medication administration with timestamps, report glucose levels, and use localStorage for data storage.
+
+2. Product Definition
+2.1 Product Goals
+Comprehensive Medicine Management: Enable users to maintain accurate inventory of all medications with individual tablet-level tracking and automated stock updates upon administration.
+
+Health Data Integration: Provide a unified platform for tracking both medication adherence and glucose levels with historical data visualization and trend analysis.
+
+Personal Health Empowerment: Deliver an intuitive, privacy-focused solution that helps users maintain better medication compliance and health monitoring without requiring external dependencies.
+
+2.2 User Stories
+As a chronic disease patient, I want to track my medication inventory at the tablet level so that I never run out of essential medications unexpectedly.
+
+As a diabetes patient, I want to log my glucose readings alongside my medication intake so that I can identify patterns and correlations in my health data.
+
+As a medication user, I want to record exactly when I take each dose so that I can maintain proper spacing between medications and avoid double-dosing.
+
+As a health-conscious individual, I want to view historical trends of my medication adherence and glucose levels so that I can share accurate information with my healthcare provider.
+
+As a privacy-aware user, I want my health data stored locally on my device so that I maintain complete control over my sensitive medical information.
+
+2.3 Competitive Analysis
+Medisafe
+
+Pros: Comprehensive medication reminders, family sharing, drug interaction warnings
+Cons: Requires internet connectivity, complex interface, subscription model for advanced features
+MyTherapy
+
+Pros: Medication tracking, symptom logging, appointment reminders
+Cons: Limited glucose-specific features, requires account creation, data stored on external servers
+Glucose Buddy
+
+Pros: Specialized glucose tracking, carb counting, A1C estimation
+Cons: Limited medication management, subscription required for full features, no offline capability
+PillPack (Amazon Pharmacy)
+
+Pros: Automated packaging, medication delivery, professional oversight
+Cons: Requires prescription transfer, monthly fees, limited to US, no personal tracking features
+Dosecast
+
+Pros: Flexible dosing schedules, medication history, simple interface
+Cons: No glucose tracking, limited inventory management, basic reporting features
+CareZone
+
+Pros: Family medication management, photo storage for prescriptions, journal features
+Cons: Discontinued service, was cloud-dependent, limited offline functionality
+Round Health
+
+Pros: Visual pill identification, adherence tracking, reminder system
+Cons: Requires internet for full functionality, limited health metric integration, subscription model
+2.4 Competitive Quadrant Chart
+Feature Rich & Accessible
+Complex but Limited Access
+Basic & Limited
+Simple & Accessible
+Our Target Product
+Round Health
+CareZone
+Dosecast
+PillPack
+Glucose Buddy
+MyTherapy
+Medisafe
+Low Feature Complexity
+High Feature Complexity
+Low Accessibility
+High Accessibility
+“Medicine Tracking Applications: Features vs Accessibility”
+
+3. Technical Specifications
+3.1 Requirements Analysis
+The personal medicine and glucose tracking website requires a comprehensive client-side solution that operates independently of external servers while providing robust data management capabilities. The system must handle complex medication inventory calculations, time-sensitive logging operations, and data visualization for health trends.
+
+Key technical considerations include:
+
+Data Persistence: localStorage implementation with JSON serialization for complex data structures
+Real-time Updates: Immediate inventory adjustments upon medication administration
+Data Integrity: Validation mechanisms to prevent negative stock counts and invalid entries
+User Experience: Responsive design with intuitive navigation between medication and glucose tracking features
+Performance: Efficient data queries and filtering for historical data analysis
+Backup/Export: Data export functionality for backup and healthcare provider sharing
+3.2 Requirements Pool
+P0 Requirements (Must-Have)
+MED-001: Medicine inventory management with individual tablet counting
+MED-002: Medication administration logging with precise timestamps
+MED-003: Automatic stock deduction upon medication intake recording
+GLU-001: Glucose level entry and storage system
+DATA-001: localStorage implementation for all data persistence
+UI-001: Responsive web interface compatible with desktop and mobile browsers
+NAV-001: Navigation system between medicine and glucose tracking modules
+P1 Requirements (Should-Have)
+MED-004: Medicine search and filtering capabilities
+MED-005: Low stock alerts and notifications
+GLU-002: Glucose trend visualization with charts
+DATA-002: Data export functionality (JSON/CSV formats)
+UI-002: Dark/light theme toggle
+HIST-001: Historical data viewing with date range filters
+VALID-001: Input validation for all data entry forms
+P2 Requirements (Nice-to-Have)
+MED-006: Medication photos and notes functionality
+GLU-003: Glucose target range settings and alerts
+REPORT-001: Weekly/monthly summary reports
+DATA-003: Data import functionality from other applications
+UI-003: Customizable dashboard layout
+REMIND-001: Browser-based reminder notifications
+BACKUP-001: Automated local backup creation
+3.3 UI Design Draft
+Main Dashboard Layout
+┌─────────────────────────────────────────────────────────┐
+│ Medicine & Glucose Tracker              [Settings] [⚙] │
+├─────────────────────────────────────────────────────────┤
+│ [Medicine Tracker] [Glucose Tracker] [History] [Export] │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  Quick Actions:                                         │
+│  [+ Add Medicine] [+ Log Dose] [+ Record Glucose]      │
+│                                                         │
+│  Recent Activity:                                       │
+│  ┌─────────────────────────────────────────────────┐   │
+│  │ Today, 8:30 AM - Metformin 500mg (47 left)     │   │
+│  │ Today, 8:25 AM - Glucose: 120 mg/dL            │   │
+│  │ Yesterday, 8:30 PM - Insulin 10 units (8 left) │   │
+│  └─────────────────────────────────────────────────┘   │
+│                                                         │
+│  Low Stock Alerts:                                      │
+│  ⚠ Insulin - 8 units remaining                         │
+│  ⚠ Blood pressure medication - 3 tablets remaining     │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+Medicine Management Interface
+┌─────────────────────────────────────────────────────────┐
+│ Medicine Inventory                    [+ Add Medicine]  │
+├─────────────────────────────────────────────────────────┤
+│ Search: [________________] Filter: [All ▼] Sort: [A-Z ▼]│
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Metformin 500mg                              [Edit] │ │
+│ │ Current Stock: 47 tablets                           │ │
+│ │ Last Taken: Today 8:30 AM                          │ │
+│ │ [Take Dose] [View History]                         │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Insulin (Rapid Acting)                       [Edit] │ │
+│ │ Current Stock: 8 units                             │ │
+│ │ Last Taken: Yesterday 8:30 PM                      │ │
+│ │ [Take Dose] [View History]                         │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+Glucose Tracking Interface
+┌─────────────────────────────────────────────────────────┐
+│ Glucose Tracking                      [+ Record Reading]│
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│ Latest Reading: 120 mg/dL (Today 8:25 AM)             │
+│ Target Range: 80-130 mg/dL                             │
+│                                                         │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │           Glucose Trend (Last 7 Days)               │ │
+│ │ 150 ┤                                               │ │
+│ │ 130 ┤     ●                                         │ │
+│ │ 110 ┤ ●       ●   ●                                 │ │
+│ │  90 ┤           ●     ●                             │ │
+│ │  70 ┤                     ●                         │ │
+│ │     └─────────────────────────────────────────────  │ │
+│ │      Mon Tue Wed Thu Fri Sat Sun                    │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ Recent Readings:                                        │
+│ • Today 8:25 AM - 120 mg/dL (Normal)                  │
+│ • Yesterday 8:20 PM - 95 mg/dL (Normal)               │
+│ • Yesterday 8:25 AM - 115 mg/dL (Normal)              │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+3.4 Open Questions
+Medication Units: Should the system support different medication units (tablets, ml, units, drops) or focus primarily on tablets as specified?
+
+Glucose Units: Should the system support both mg/dL and mmol/L glucose units, or default to mg/dL for the US market?
+
+Data Retention: What should be the maximum data retention period in localStorage before suggesting data export/cleanup?
+
+Medication Identification: Should users be able to add custom medication names, or should there be a predefined medication database for consistency?
+
+Time Zone Handling: How should the system handle time zone changes when users travel with their medication schedules?
+
+Multiple Users: Should the system support multiple user profiles on the same device, or maintain single-user focus for privacy?
+
+Backup Strategy: What automated backup mechanisms should be implemented to prevent data loss due to browser cache clearing?
+
+Integration Scope: Should the system include basic food logging to correlate with glucose readings, or maintain strict focus on medication and glucose only?
+
+4. Implementation Considerations
+4.1 Data Structure Design
+Normalized data models for medicines, doses, and glucose readings
+Efficient indexing strategies for quick data retrieval
+Version control for data schema evolution
+4.2 Performance Optimization
+Lazy loading for historical data
+Efficient search algorithms for medication lookup
+Optimized chart rendering for glucose trends
+4.3 Security & Privacy
+Client-side data encryption for sensitive health information
+Secure data export with user consent mechanisms
+Privacy-first design with no external data transmission
+This PRD provides a comprehensive foundation for developing a personal medicine and glucose tracking website that meets user needs while maintaining simplicity and privacy focus.

@@ -1,0 +1,256 @@
+Medicine Tracking System - System Design Document
+1. Implementation Approach
+We will implement a comprehensive personal medicine tracking system using modern web technologies with localStorage for data persistence. The system will be built as a Progressive Web App (PWA) to ensure offline functionality and mobile responsiveness.
+
+Key Implementation Tasks:
+Frontend Architecture - Build a responsive single-page application using HTML5, CSS3, and vanilla JavaScript with modular component architecture
+Data Management Layer - Implement robust localStorage-based data persistence with validation, backup, and recovery mechanisms
+Medicine Management - Create comprehensive medicine catalog with detailed information, stock tracking, and expiry management
+Administration Logging - Develop precise tablet-level tracking with timestamp logging and adherence monitoring
+Glucose Tracking - Implement glucose level recording with trend analysis and reporting capabilities
+Notification System - Build browser-based notification system for medication reminders and low stock alerts
+Reporting & Analytics - Create comprehensive reporting dashboard with adherence metrics and export functionality
+Data Security - Implement client-side data encryption and validation for sensitive health information
+2. Main User-UI Interaction Patterns
+Primary User Workflows:
+Daily Medicine Taking
+
+User opens dashboard and sees today’s scheduled medications
+Clicks “Take Medicine” button for specific medication
+System logs timestamp, updates stock count, and shows confirmation
+User can add notes about side effects or effectiveness
+Medicine Stock Management
+
+User adds new medicine with complete details (name, strength, dosage form, instructions)
+System tracks individual tablets and maintains current stock levels
+User receives alerts when stock falls below minimum threshold
+User logs refills with batch numbers and expiry dates
+Glucose Level Monitoring
+
+User quickly logs glucose readings with measurement context (fasting, post-meal)
+System categorizes readings and provides immediate feedback on normal ranges
+User can view trends and patterns over time with visual charts
+Adherence Monitoring
+
+System automatically calculates adherence rates based on scheduled vs. actual doses
+User can view detailed adherence reports with missed doses and timing analysis
+Export functionality allows sharing data with healthcare providers
+3. System Architecture
+The system follows a layered architecture pattern with clear separation of concerns:
+
+┌─────────────────────────────────────────────────────────────┐
+│                    Frontend Layer                           │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
+│  │  Dashboard  │ │  Medicine   │ │  Administration     │   │
+│  │             │ │  Management │ │  Logger             │   │
+│  └─────────────┘ └─────────────┘ └─────────────────────┘   │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
+│  │   Stock     │ │   Glucose   │ │   Reports &         │   │
+│  │  Tracker    │ │  Tracker    │ │   Analytics         │   │
+│  └─────────────┘ └─────────────┘ └─────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                Data Management Layer                        │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
+│  │ LocalStorage│ │    Data     │ │   Import/Export     │   │
+│  │  Manager    │ │ Validation  │ │    Service          │   │
+│  └─────────────┘ └─────────────┘ └─────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                   Browser Storage                           │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐   │
+│  │  medicines  │ │stock_records│ │administration_logs  │   │
+│  └─────────────┘ └─────────────┘ └─────────────────────┘   │
+│  ┌─────────────┐ ┌─────────────┐                           │
+│  │glucose_     │ │user_        │                           │
+│  │readings     │ │settings     │                           │
+│  └─────────────┘ └─────────────┘                           │
+└─────────────────────────────────────────────────────────────┘
+4. Data Structures and Interfaces
+Core Data Models:
+Medicine Entity:
+
+Comprehensive medicine information including name, strength, dosage form, manufacturer
+Stock management with current levels, minimum thresholds, and maximum capacity
+Clinical information including instructions, side effects, and contraindications
+Pricing and supplier information for cost tracking
+Stock Record Entity:
+
+Detailed transaction history for every stock change (additions, administrations, adjustments)
+Batch tracking with expiry dates and supplier information
+Cost tracking for financial management
+Audit trail with timestamps and operation types
+Administration Log Entity:
+
+Precise logging of each dose taken with scheduled vs. actual timing
+Adherence status calculation (on-time, late, missed)
+Side effects and effectiveness tracking
+Automatic stock deduction and remaining tablet calculation
+Glucose Reading Entity:
+
+Comprehensive glucose measurements with context (fasting, post-meal, bedtime)
+Meal relationship tracking and symptom correlation
+Range validation and trend analysis
+Export capability for healthcare provider sharing
+5. Program Call Flow
+Medicine Administration Flow:
+User Interaction - User selects medicine from dashboard and clicks “Take Medicine”
+Validation - System validates medicine availability and dosage requirements
+Stock Update - Stock service decrements tablet count and creates stock record
+Log Creation - Administration service creates detailed log entry with timestamp
+Adherence Calculation - System calculates adherence metrics and updates statistics
+Notification Check - System checks for low stock conditions and triggers alerts
+UI Update - Dashboard refreshes to show updated stock levels and recent activity
+Data Persistence Flow:
+Data Validation - All input data undergoes comprehensive validation
+Encryption - Sensitive data is encrypted before storage
+Storage Operation - Data is saved to appropriate localStorage keys
+Backup Creation - Automatic backup creation for data recovery
+Integrity Check - Data integrity validation after storage operations
+6. LocalStorage Schema Design
+Storage Structure:
+// Medicine definitions and current stock
+localStorage['med_tracker_medicines'] = {
+  "med_001": {
+    id: "med_001",
+    name: "Aspirin",
+    genericName: "Acetylsalicylic Acid",
+    strength: "81mg",
+    dosageForm: "Tablet",
+    currentStock: 30,
+    minStockLevel: 10,
+    // ... additional fields
+  }
+}
+
+// Stock transaction history
+localStorage['med_tracker_stock_records'] = {
+  "stock_001": {
+    id: "stock_001",
+    medicineId: "med_001",
+    operation: "administration",
+    quantityChanged: -1,
+    previousStock: 31,
+    newStock: 30,
+    timestamp: "2024-01-15T08:05:00Z"
+    // ... additional fields
+  }
+}
+
+// Administration logs
+localStorage['med_tracker_administration_logs'] = {
+  "admin_001": {
+    id: "admin_001",
+    medicineId: "med_001",
+    dosageTaken: 1,
+    scheduledTime: "2024-01-15T08:00:00Z",
+    actualTime: "2024-01-15T08:05:00Z",
+    adherenceStatus: "on_time",
+    tabletsRemaining: 30
+    // ... additional fields
+  }
+}
+
+// Glucose readings
+localStorage['med_tracker_glucose_readings'] = {
+  "glucose_001": {
+    id: "glucose_001",
+    value: 120,
+    unit: "mg/dL",
+    measurementType: "fasting",
+    timestamp: "2024-01-15T07:30:00Z",
+    beforeAfterMeal: "before"
+    // ... additional fields
+  }
+}
+
+// User settings and preferences
+localStorage['med_tracker_user_settings'] = {
+  notifications: {
+    enabled: true,
+    reminderTimes: ["08:00", "12:00", "18:00"],
+    lowStockAlert: true
+  },
+  display: {
+    theme: "light",
+    language: "en",
+    dateFormat: "MM/DD/YYYY"
+  },
+  backup: {
+    autoBackup: true,
+    backupFrequency: "daily",
+    lastBackup: "2024-01-15T00:00:00Z"
+  }
+}
+7. UI Navigation Flow
+The application follows a hub-and-spoke navigation pattern with the Dashboard as the central hub:
+
+Dashboard serves as the main entry point with quick access to all major functions
+Maximum navigation depth of 3 levels to ensure user doesn’t get lost
+Consistent back navigation available at every level
+Breadcrumb navigation for complex workflows
+Quick action buttons for high-frequency tasks (Take Medicine, Log Glucose)
+Navigation priorities:
+
+High-frequency actions (taking medicine, logging glucose) are prominently featured
+Critical information (low stock alerts, missed doses) is surfaced immediately
+Administrative functions (adding medicines, settings) are easily accessible but not prominent
+Reporting functions are grouped together with clear export options
+8. Technology Stack
+Frontend Technologies:
+HTML5 with semantic markup for accessibility
+CSS3 with Flexbox/Grid for responsive layouts
+Vanilla JavaScript (ES6+) with modular architecture
+Web APIs: Notification API, File System Access API, Service Worker API
+Progressive Web App features for offline functionality
+Data Management:
+localStorage for primary data persistence
+IndexedDB as fallback for large datasets
+JSON for data serialization
+Client-side encryption for sensitive data protection
+Development Tools:
+Webpack for module bundling and optimization
+Babel for JavaScript transpilation
+ESLint for code quality
+Prettier for code formatting
+Jest for unit testing
+9. Security and Privacy Considerations
+Data Protection:
+Client-side encryption for all sensitive health data
+Data validation to prevent injection attacks
+Input sanitization for all user inputs
+No external data transmission - all data remains on user’s device
+Privacy Features:
+Local-only storage - no cloud synchronization by default
+User-controlled exports for data sharing with healthcare providers
+Data anonymization options for analytics
+Secure deletion capabilities for sensitive information
+10. Performance Optimization
+Storage Optimization:
+Data compression for large datasets
+Lazy loading of historical data
+Efficient indexing for fast searches
+Automatic cleanup of old records based on user preferences
+UI Performance:
+Virtual scrolling for large lists
+Debounced search for real-time filtering
+Optimistic UI updates for better user experience
+Service worker caching for offline functionality
+11. Unclear Aspects and Assumptions
+Assumptions Made:
+Single User System - Designed for individual use, not multi-user households
+Browser Compatibility - Targeting modern browsers with localStorage support
+Data Retention - Assuming users want to keep historical data indefinitely unless manually deleted
+Medication Scheduling - Assuming users will manually track scheduled times rather than complex recurring schedules
+Glucose Units - Defaulting to mg/dL but supporting mmol/L conversion
+Areas Requiring Clarification:
+Data Export Format - Should we support specific healthcare data standards (HL7, FHIR)?
+Medication Database - Should we include a pre-populated medicine database or rely entirely on user input?
+Reminder Complexity - Do we need support for complex dosing schedules (every other day, tapering doses)?
+Multi-device Sync - Is there a future requirement for synchronizing data across devices?
+Healthcare Integration - Should we plan for future integration with healthcare provider systems?
+Technical Uncertainties:
+Storage Limits - localStorage has browser-specific size limits that may affect long-term users
+Data Migration - Strategy for handling schema changes in future versions
+Backup Reliability - Ensuring data backup integrity without server-side validation
+Performance Scaling - How the system will perform with years of accumulated data

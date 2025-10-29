@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,14 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 import { Medicine } from "@/lib/storage";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AddMedicineDialogProps {
   onAdd: (medicine: Omit<Medicine, 'id' | 'createdAt'>) => void;
   editMedicine?: Medicine;
   onUpdate?: (id: string, updates: Partial<Medicine>) => void;
+  onClose?: () => void;
 }
 
-export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate }: AddMedicineDialogProps) => {
+export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate, onClose }: AddMedicineDialogProps) => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(editMedicine?.name ?? "");
   const [totalStock, setTotalStock] = useState(
@@ -31,6 +33,14 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate }: AddMedicine
   );
   const [dosage, setDosage] = useState(editMedicine?.dosage ?? "");
   const [notes, setNotes] = useState(editMedicine?.notes ?? "");
+  const [schedule, setSchedule] = useState<Medicine["schedule"]>(editMedicine?.schedule ?? undefined);
+
+  // Open the dialog automatically when an edit target is provided
+  useEffect(() => {
+    if (editMedicine) {
+      setOpen(true);
+    }
+  }, [editMedicine]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +50,7 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate }: AddMedicine
         totalStock: parseInt(totalStock),
         currentStock: parseInt(currentStock),
         dosage,
+        schedule,
         notes,
       });
     } else {
@@ -48,6 +59,7 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate }: AddMedicine
         totalStock: parseInt(totalStock),
         currentStock: parseInt(currentStock),
         dosage,
+        schedule,
         notes,
       });
     }
@@ -60,11 +72,15 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate }: AddMedicine
     setTotalStock("");
     setCurrentStock("");
     setDosage("");
+    setSchedule(undefined);
     setNotes("");
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => {
+      setOpen(o);
+      if (!o && editMedicine && onClose) onClose();
+    }}>
       <DialogTrigger asChild>
         {editMedicine ? (
           <Button variant="ghost" size="sm">Edit</Button>
@@ -131,6 +147,25 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate }: AddMedicine
               placeholder="e.g., 500mg"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Schedule</Label>
+            <Select value={schedule ?? undefined} onValueChange={(v) => setSchedule((v === '__none__' ? undefined : v) as Medicine["schedule"])}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select schedule (optional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None</SelectItem>
+                <SelectItem value="morning">Only Morning</SelectItem>
+                <SelectItem value="noon">Only Noon</SelectItem>
+                <SelectItem value="night">Only Night</SelectItem>
+                <SelectItem value="morning_noon">Morning and Noon</SelectItem>
+                <SelectItem value="morning_night">Morning and Night</SelectItem>
+                <SelectItem value="noon_night">Noon and Night</SelectItem>
+              <SelectItem value="three_times">3 times</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">

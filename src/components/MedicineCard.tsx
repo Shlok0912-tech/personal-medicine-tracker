@@ -26,6 +26,23 @@ export const MedicineCard = ({ medicine, onTake, onEdit, onDelete }: MedicineCar
             <div>
               <CardTitle className="text-lg">{medicine.name}</CardTitle>
               <CardDescription>{medicine.dosage}</CardDescription>
+              {medicine.schedule && (
+                <div className="mt-1">
+                  <Badge variant="secondary">
+                    {(
+                      {
+                        morning: 'Only Morning',
+                        noon: 'Only Noon',
+                        night: 'Only Night',
+                        morning_noon: 'Morning & Noon',
+                        morning_night: 'Morning & Night',
+                        noon_night: 'Noon & Night',
+                        three_times: '3 times',
+                      } as const
+                    )[medicine.schedule]}
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-1">

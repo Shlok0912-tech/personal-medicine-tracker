@@ -6,6 +6,7 @@ export interface Medicine {
   totalStock: number;
   currentStock: number;
   dosage: string;
+  schedule?: 'morning' | 'noon' | 'night' | 'morning_noon' | 'morning_night' | 'noon_night' | 'three_times';
   notes?: string;
   createdAt: string;
 }
@@ -53,10 +54,27 @@ const KEYS = {
   userSettings: 'med_tracker_user_settings',
 } as const;
 
-function readMap<T>(key: string): Record<string, T> {
+function readMap<T extends { id?: string }>(key: string): Record<string, T> {
   try {
     const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as Record<string, T>) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    // Migrate legacy array format to keyed map by id
+    if (Array.isArray(parsed)) {
+      const map: Record<string, T> = {};
+      for (const item of parsed as T[]) {
+        const itemId = (item as any)?.id;
+        if (typeof itemId === 'string' && itemId.length > 0) {
+          map[itemId] = item;
+        }
+      }
+      return map;
+    }
+    // Ensure we only return plain object maps
+    if (parsed && typeof parsed === 'object') {
+      return parsed as Record<string, T>;
+    }
+    return {};
   } catch {
     return {};
   }

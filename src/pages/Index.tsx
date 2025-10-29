@@ -12,6 +12,7 @@ import { GlucoseCard } from "@/components/GlucoseCard";
 import { AddGlucoseDialog } from "@/components/AddGlucoseDialog";
 import { HistoryTab } from "@/components/HistoryTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -23,6 +24,8 @@ const Index = () => {
   const { toast } = useToast();
   const [lowStockThreshold, setLowStockThreshold] = useState(20);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [scheduleFilter, setScheduleFilter] = useState<"all" | NonNullable<Medicine["schedule"]>>("all");
+  const [editMedicineForDialog, setEditMedicineForDialog] = useState<Medicine | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -290,9 +293,31 @@ const Index = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <h2 className="text-2xl font-semibold">Medicine Inventory</h2>
-                <AddMedicineDialog onAdd={handleAddMedicine} />
+                <div className="flex items-center gap-2">
+                  <Select value={scheduleFilter} onValueChange={(v) => setScheduleFilter(v as any)}>
+                    <SelectTrigger className="w-[210px]">
+                      <SelectValue placeholder="Filter by schedule" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Schedules</SelectItem>
+                      <SelectItem value="morning">Only Morning</SelectItem>
+                      <SelectItem value="noon">Only Noon</SelectItem>
+                      <SelectItem value="night">Only Night</SelectItem>
+                      <SelectItem value="morning_noon">Morning and Noon</SelectItem>
+                      <SelectItem value="morning_night">Morning and Night</SelectItem>
+                      <SelectItem value="noon_night">Noon and Night</SelectItem>
+                      <SelectItem value="three_times">3 times</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <AddMedicineDialog 
+                    onAdd={handleAddMedicine} 
+                    editMedicine={editMedicineForDialog || undefined}
+                    onUpdate={handleUpdateMedicine}
+                    onClose={() => setEditMedicineForDialog(null)}
+                  />
+                </div>
               </div>
 
               {medicines.length === 0 ? (
@@ -301,14 +326,15 @@ const Index = () => {
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {medicines.map((medicine) => (
+                  {medicines
+                    .filter(m => scheduleFilter === 'all' || (m.schedule ?? 'all') === scheduleFilter)
+                    .map((medicine) => (
                     <MedicineCard
                       key={medicine.id}
                       medicine={medicine}
                       onTake={handleTakeMedicine}
                       onEdit={(med) => {
-                        // This would open edit dialog - simplified for now
-                        console.log("Edit", med);
+                        setEditMedicineForDialog(med);
                       }}
                       onDelete={handleDeleteMedicine}
                     />

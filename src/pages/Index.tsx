@@ -14,6 +14,7 @@ import { HistoryTab } from "@/components/HistoryTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import DosageCalculator from "@/components/DosageCalculator";
 
 const Index = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -241,18 +242,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="container max-w-6xl py-8 space-y-8">
+      <div className="container max-w-6xl py-6 sm:py-8 px-4 space-y-6 sm:space-y-8">
         <header className="text-center space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex-1" />
-            <h1 className="text-4xl font-bold tracking-tight">
+            <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 Health Tracker
               </span>
             </h1>
             <div className="flex-1 flex justify-end">
               <button
-                className="text-sm px-3 py-1 rounded-md border hover:bg-accent/10"
+                className="text-xs sm:text-sm px-3 py-1 rounded-md border hover:bg-accent/10"
                 onClick={() => downloadCsvExport()}
               >
                 Export CSV
@@ -265,22 +266,27 @@ const Index = () => {
         </header>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <Activity className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2">
-              <History className="h-4 w-4" />
-              History
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="gap-2">
-              Reports
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="gap-2">
-              Settings
-            </TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+            <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:grid sm:grid-cols-4 gap-1 sm:gap-2">
+              <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
+                <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="history" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
+                <History className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">History</span>
+              </TabsTrigger>
+            <TabsTrigger value="reports" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
+                <span className="text-xs sm:text-sm">Reports</span>
+              </TabsTrigger>
+              <TabsTrigger value="calculator" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
+                <span className="text-xs sm:text-sm">Calculator</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
+                <span className="text-xs sm:text-sm">Settings</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="dashboard" className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
@@ -293,11 +299,11 @@ const Index = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between gap-4">
-                <h2 className="text-2xl font-semibold">Medicine Inventory</h2>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
+                <h2 className="text-xl sm:text-2xl font-semibold">Medicine Inventory</h2>
+                <div className="flex items-center gap-2 flex-wrap">
                   <Select value={scheduleFilter} onValueChange={(v) => setScheduleFilter(v as any)}>
-                    <SelectTrigger className="w-[210px]">
+                    <SelectTrigger className="w-[160px] sm:w-[210px]">
                       <SelectValue placeholder="Filter by schedule" />
                     </SelectTrigger>
                     <SelectContent>
@@ -368,6 +374,10 @@ const Index = () => {
 
           <TabsContent value="reports">
             <ReportsPanel medicineLogs={medicineLogs} glucoseReadings={glucoseReadings} />
+          </TabsContent>
+
+          <TabsContent value="calculator">
+            <DosageCalculator medicines={medicines} />
           </TabsContent>
 
           <TabsContent value="settings">

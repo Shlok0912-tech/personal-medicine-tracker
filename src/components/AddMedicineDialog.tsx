@@ -38,6 +38,13 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate, onClose }: Ad
   // Open the dialog automatically when an edit target is provided
   useEffect(() => {
     if (editMedicine) {
+      // Populate form with existing values when editing
+      setName(editMedicine.name ?? "");
+      setTotalStock(editMedicine.totalStock !== undefined ? String(editMedicine.totalStock) : "");
+      setCurrentStock(editMedicine.currentStock !== undefined ? String(editMedicine.currentStock) : "");
+      setDosage(editMedicine.dosage ?? "");
+      setNotes(editMedicine.notes ?? "");
+      setSchedule(editMedicine.schedule ?? undefined);
       setOpen(true);
     }
   }, [editMedicine]);
@@ -79,7 +86,14 @@ export const AddMedicineDialog = ({ onAdd, editMedicine, onUpdate, onClose }: Ad
   return (
     <Dialog open={open} onOpenChange={(o) => {
       setOpen(o);
-      if (!o && editMedicine && onClose) onClose();
+      if (o) {
+        // If opening in add mode, clear stale edit values
+        if (!editMedicine) {
+          resetForm();
+        }
+      } else {
+        if (editMedicine && onClose) onClose();
+      }
     }}>
       <DialogTrigger asChild>
         {editMedicine ? (

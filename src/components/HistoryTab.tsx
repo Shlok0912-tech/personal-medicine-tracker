@@ -21,10 +21,16 @@ export const HistoryTab = ({ medicineLogs, glucoseReadings, onDeleteGlucose, onD
 
   return (
     <Tabs defaultValue="medicine" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="medicine">Medicine History</TabsTrigger>
-        <TabsTrigger value="glucose">Glucose History</TabsTrigger>
-      </TabsList>
+      <div className="w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
+        <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:grid sm:grid-cols-2 gap-1 sm:gap-2">
+          <TabsTrigger value="medicine" className="whitespace-nowrap flex-shrink-0 px-3 sm:px-3 text-xs sm:text-sm">
+            Medicine History
+          </TabsTrigger>
+          <TabsTrigger value="glucose" className="whitespace-nowrap flex-shrink-0 px-3 sm:px-3 text-xs sm:text-sm">
+            Glucose History
+          </TabsTrigger>
+        </TabsList>
+      </div>
       
       <TabsContent value="medicine" className="space-y-4">
         {medicineLogs.length === 0 ? (

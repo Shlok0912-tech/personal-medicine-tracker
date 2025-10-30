@@ -1,5 +1,5 @@
 {
-  "name": "tablet-tally-time",
+  "name": "personalmedicineandhealthtracker",
   "compatibility_date": "2025-10-29",
   "build": {
     "command": "npm run build"

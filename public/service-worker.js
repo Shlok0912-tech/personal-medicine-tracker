@@ -1,4 +1,4 @@
-const CACHE_NAME = "medicine-health-tracker-v2";
+const CACHE_NAME = "medicine-health-tracker-v3";
 const CORE_ASSETS = [
   "/",
   "/index.html",
@@ -41,6 +41,24 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   const isSameOrigin = url.origin === self.location.origin;
+
+  // Redirect icon-192.png and icon-512.png to FullLogo.png to avoid 404/invalid image
+  if (isSameOrigin && (url.pathname === "/icon-192.png" || url.pathname === "/icon-512.png")) {
+    const logoRequest = new Request("/FullLogo.png", { headers: request.headers, mode: request.mode, credentials: request.credentials, cache: request.cache, redirect: request.redirect });
+    event.respondWith(
+      caches.match(logoRequest).then((cachedLogo) => {
+        if (cachedLogo) return cachedLogo;
+        return fetch(logoRequest).then((resp) => {
+          if (resp && resp.status === 200) {
+            const clone = resp.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(logoRequest, clone));
+          }
+          return resp;
+        });
+      })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then((cachedResponse) => {

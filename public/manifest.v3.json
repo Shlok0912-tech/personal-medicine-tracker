@@ -11,8 +11,6 @@
   "orientation": "portrait",
   "icons": [
     { "src": "/placeholder.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
-  ],
-  "prefer_related_applications": false,
-  "categories": ["health", "medical", "productivity"]
+  ]
 }
 

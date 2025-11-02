@@ -1,4 +1,4 @@
-# Health Tracker - Tablet Tally Time
+# Meditrack
 
 A modern health tracking application for managing medicines and glucose levels with Google Sheets integration.
 

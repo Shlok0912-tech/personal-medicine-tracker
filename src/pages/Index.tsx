@@ -248,7 +248,7 @@ const Index = () => {
             <div className="flex-1" />
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight">
               <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Health Tracker
+                Meditrack
               </span>
             </h1>
             <div className="flex-1 flex justify-end">

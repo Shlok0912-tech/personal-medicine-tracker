@@ -11,7 +11,7 @@ let installButtonEl: HTMLButtonElement | null = null;
 function ensureInstallButton() {
   if (installButtonEl) return installButtonEl;
   const btn = document.createElement("button");
-  btn.textContent = "Install Health Tracker";
+  btn.textContent = "Install Meditrack";
   btn.style.position = "fixed";
   btn.style.right = "16px";
   btn.style.bottom = "16px";

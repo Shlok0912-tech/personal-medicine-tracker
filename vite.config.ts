@@ -33,9 +33,10 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "autoUpdate",
+        includeAssets: ['Appiconandlogo.jpg'],
         manifest: {
-          name: "Personal Medicine & Health Tracker",
-          short_name: "Health Tracker",
+          name: "Meditrack",
+          short_name: "Meditrack",
           description: "Track your medicines and glucose levels with an easy-to-use personal health tracker",
           theme_color: "#4CAF50",
           background_color: "#ffffff",
@@ -45,15 +46,15 @@ export default defineConfig(({ mode }) => {
           start_url: "/",
           icons: [
             {
-              src: "/FullLogo.png",
+              src: "/Appiconandlogo.jpg",
               sizes: "any",
-              type: "image/png",
+              type: "image/jpeg",
               purpose: "any maskable"
             }
           ]
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff2}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

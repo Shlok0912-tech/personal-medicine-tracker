@@ -4,92 +4,133 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-// Install prompt UX for Android/Chromium/Samsung Internet: show a button when eligible
-let deferredInstallPrompt: any;
+// Install prompt UX - Only show button when install prompt is available
+let deferredInstallPrompt: any = null;
 let installButtonEl: HTMLButtonElement | null = null;
 
-// Detect Samsung Internet browser
-const isSamsungInternet = () => {
-  const ua = navigator.userAgent;
-  return /SamsungBrowser/i.test(ua) || /Samsung/i.test(ua);
+// Check if app is already installed
+const isInstalled = () => {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true ||
+         document.referrer.includes('android-app://');
 };
 
-function ensureInstallButton() {
+function createInstallButton() {
   if (installButtonEl) return installButtonEl;
+  
   const btn = document.createElement("button");
   btn.textContent = "Install Meditrack";
   btn.style.position = "fixed";
   btn.style.right = "16px";
   btn.style.bottom = "16px";
   btn.style.zIndex = "9999";
-  btn.style.padding = "10px 14px";
-  btn.style.borderRadius = "9999px";
+  btn.style.padding = "12px 20px";
+  btn.style.borderRadius = "8px";
   btn.style.border = "none";
   btn.style.color = "#fff";
   btn.style.background = "#4CAF50";
-  btn.style.boxShadow = "0 2px 8px rgba(0,0,0,0.2)";
+  btn.style.boxShadow = "0 4px 12px rgba(76, 175, 80, 0.4)";
   btn.style.fontSize = "14px";
-  btn.style.fontWeight = "500";
+  btn.style.fontWeight = "600";
   btn.style.cursor = "pointer";
+  btn.style.transition = "all 0.3s ease";
+  btn.style.display = "none"; // Hidden by default
   btn.setAttribute("aria-label", "Install Meditrack app");
+  
+  // Hover effect
+  btn.addEventListener("mouseenter", () => {
+    btn.style.background = "#45a049";
+    btn.style.transform = "scale(1.05)";
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.background = "#4CAF50";
+    btn.style.transform = "scale(1)";
+  });
+  
+  btn.onclick = async () => {
+    if (!deferredInstallPrompt) {
+      console.log("Install prompt not available");
+      return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = "Installing...";
+    
+    try {
+      // Show the install prompt
+      deferredInstallPrompt.prompt();
+      
+      // Wait for user's response
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      
+      console.log(`User response to install prompt: ${outcome}`);
+      
+      if (outcome === 'accepted') {
+        btn.textContent = "Installed!";
+        setTimeout(() => {
+          btn.remove();
+          installButtonEl = null;
+        }, 1500);
+      } else {
+        btn.textContent = "Install Meditrack";
+        btn.disabled = false;
+      }
+      
+      // Clear the deferred prompt
+      deferredInstallPrompt = null;
+    } catch (error) {
+      console.error("Error showing install prompt:", error);
+      btn.textContent = "Install Meditrack";
+      btn.disabled = false;
+    }
+  };
+  
   document.body.appendChild(btn);
   installButtonEl = btn;
   return btn;
 }
 
-window.addEventListener("beforeinstallprompt", (e: any) => {
+// Listen for the beforeinstallprompt event
+window.addEventListener("beforeinstallprompt", (e: Event) => {
+  // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
-  deferredInstallPrompt = e;
-  const btn = ensureInstallButton();
   
-  // For Samsung Internet, show button immediately
-  if (isSamsungInternet()) {
-    btn.style.display = "block";
+  // Don't show if already installed
+  if (isInstalled()) {
+    return;
   }
   
-  btn.onclick = async () => {
-    btn.disabled = true;
-    try {
-      if (deferredInstallPrompt) {
-        await deferredInstallPrompt.prompt();
-        const choiceResult = await deferredInstallPrompt.userChoice;
-        console.log("User choice:", choiceResult.outcome);
-      } else {
-        // Fallback: try manual installation instructions
-        alert("Please use the browser menu to add this site to your home screen.\n\nSamsung Internet: Menu > Add page to > Home screen");
-      }
-    } catch (error) {
-      console.error("Install prompt error:", error);
-    } finally {
-      deferredInstallPrompt = null;
-      btn.remove();
-      installButtonEl = null;
-    }
-  };
+  // Store the event for later use
+  deferredInstallPrompt = e as any;
+  
+  // Create and show the install button
+  const btn = createInstallButton();
+  btn.style.display = "block";
+  
+  console.log("Install prompt available - button shown");
 });
 
-// For Samsung Internet, check if app is installable after page load
-if (isSamsungInternet() && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    setTimeout(() => {
-      // Check if manifest is available
-      const manifestLink = document.querySelector('link[rel="manifest"]');
-      if (manifestLink && !installButtonEl) {
-        // Show install option even if beforeinstallprompt didn't fire
-        const btn = ensureInstallButton();
-        btn.onclick = () => {
-          alert("To install Meditrack:\n\n1. Tap the menu (⋮) in Samsung Internet\n2. Select 'Add page to'\n3. Choose 'Home screen'\n\nOr use the browser's install prompt if available.");
-          btn.remove();
-          installButtonEl = null;
-        };
-      }
-    }, 2000);
-  });
-}
-
+// Hide button if app gets installed
 window.addEventListener("appinstalled", () => {
+  console.log("PWA was installed");
   if (installButtonEl) {
     installButtonEl.remove();
     installButtonEl = null;
   }
+  deferredInstallPrompt = null;
 });
+
+// Check on page load if already installed
+if (isInstalled()) {
+  console.log("App is already installed");
+} else {
+  // Wait a bit for beforeinstallprompt event
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      if (deferredInstallPrompt && !installButtonEl) {
+        const btn = createInstallButton();
+        btn.style.display = "block";
+      }
+    }, 1000);
+  });
+}

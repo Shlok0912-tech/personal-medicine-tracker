@@ -7,7 +7,6 @@ A modern health tracking application for managing medicines and glucose levels w
 - **Medicine Inventory Management**: Add, edit, and track your medicine stock
 - **Medicine Intake Logging**: Record when you take your medicines
 - **Glucose Level Tracking**: Monitor and log your blood glucose readings
-- **Google Sheets Integration**: All data is stored in Google Sheets for easy access and sharing
 - **Real-time Sync**: Data updates in real-time across all devices
 - **Modern UI**: Built with shadcn/ui components and Tailwind CSS
 
@@ -20,7 +19,6 @@ This project is built with:
 - **React** - UI library
 - **shadcn/ui** - Beautiful, accessible UI components
 - **Tailwind CSS** - Utility-first CSS framework
-- **Google Sheets API** - Data storage and synchronization
 
 ## Getting Started
 
@@ -28,7 +26,7 @@ This project is built with:
 
 - Node.js (v16 or higher)
 - npm or yarn
-- Google Cloud Console account (for Google Sheets API)
+
 
 ### Installation
 

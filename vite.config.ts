@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -28,7 +29,67 @@ export default defineConfig(({ mode }) => {
           }
         : undefined,
     },
-    plugins: [react()],
+    plugins: [
+      react(),
+      VitePWA({
+        registerType: "autoUpdate",
+        manifest: {
+          name: "Personal Medicine & Health Tracker",
+          short_name: "Health Tracker",
+          description: "Track your medicines and glucose levels with an easy-to-use personal health tracker",
+          theme_color: "#4CAF50",
+          background_color: "#ffffff",
+          display: "standalone",
+          orientation: "portrait",
+          scope: "/",
+          start_url: "/",
+          icons: [
+            {
+              src: "/FullLogo.png",
+              sizes: "any",
+              type: "image/png",
+              purpose: "any maskable"
+            }
+          ]
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-static-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                },
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            }
+          ]
+        },
+        devOptions: {
+          enabled: false // Disable in dev mode for faster reload
+        }
+      })
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

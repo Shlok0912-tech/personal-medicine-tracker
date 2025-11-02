@@ -4,15 +4,6 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker
-      .register("/service-worker.js")
-      .then(() => console.log("Service Worker registered"))
-      .catch((err) => console.log("Service Worker failed:", err));
-  });
-}
-
 // Install prompt UX for Android/Chromium: show a button when eligible
 let deferredInstallPrompt: any;
 let installButtonEl: HTMLButtonElement | null = null;

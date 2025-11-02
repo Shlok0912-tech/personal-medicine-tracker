@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
         registerType: "autoUpdate",
         includeAssets: ['Appiconandlogo.jpg'],
         manifest: {
+          id: "/",
           name: "Meditrack",
           short_name: "Meditrack",
           description: "Track your medicines and glucose levels with an easy-to-use personal health tracker",
@@ -47,9 +48,21 @@ export default defineConfig(({ mode }) => {
           icons: [
             {
               src: "/Appiconandlogo.jpg",
+              sizes: "192x192",
+              type: "image/jpeg",
+              purpose: "any"
+            },
+            {
+              src: "/Appiconandlogo.jpg",
+              sizes: "512x512",
+              type: "image/jpeg",
+              purpose: "any"
+            },
+            {
+              src: "/Appiconandlogo.jpg",
               sizes: "any",
               type: "image/jpeg",
-              purpose: "any maskable"
+              purpose: "maskable"
             }
           ]
         },

@@ -8,6 +8,13 @@ createRoot(document.getElementById("root")!).render(<App />);
 let deferredInstallPrompt: any = null;
 let installButtonEl: HTMLButtonElement | null = null;
 
+// Detect Samsung Internet browser
+const isSamsungInternet = () => {
+  const ua = navigator.userAgent;
+  return /SamsungBrowser/i.test(ua) || 
+         /Samsung/i.test(ua) && /Mobile/i.test(ua);
+};
+
 // Check if app is already installed
 const isInstalled = () => {
   return window.matchMedia('(display-mode: standalone)').matches || 
@@ -92,11 +99,14 @@ function createInstallButton() {
 
 // Listen for the beforeinstallprompt event
 window.addEventListener("beforeinstallprompt", (e: Event) => {
+  console.log("beforeinstallprompt event fired", e);
+  
   // Prevent the mini-infobar from appearing on mobile
   e.preventDefault();
   
   // Don't show if already installed
   if (isInstalled()) {
+    console.log("App is already installed - skipping install prompt");
     return;
   }
   
@@ -120,17 +130,99 @@ window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
 });
 
-// Check on page load if already installed
-if (isInstalled()) {
-  console.log("App is already installed");
-} else {
-  // Wait a bit for beforeinstallprompt event
-  window.addEventListener("load", () => {
+// For Samsung Internet - check if installable even without beforeinstallprompt
+let installCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+window.addEventListener("load", () => {
+  console.log("Page loaded");
+  console.log("Is Samsung Internet:", isSamsungInternet());
+  console.log("Is installed:", isInstalled());
+  console.log("Service Worker:", 'serviceWorker' in navigator);
+  
+  // Check for manifest
+  const manifestLink = document.querySelector('link[rel="manifest"]');
+  console.log("Manifest link:", manifestLink?.getAttribute('href'));
+  
+  if (isInstalled()) {
+    console.log("App is already installed");
+    return;
+  }
+  
+  // For Samsung Internet, wait a bit longer and check if prompt became available
+  if (isSamsungInternet()) {
+    console.log("Detected Samsung Internet - setting up install check");
+    
+    // Wait for beforeinstallprompt (up to 5 seconds)
+    let checkCount = 0;
+    installCheckInterval = setInterval(() => {
+      checkCount++;
+      
+      if (deferredInstallPrompt && !installButtonEl) {
+        console.log("Install prompt available - showing button");
+        const btn = createInstallButton();
+        btn.style.display = "block";
+        if (installCheckInterval) {
+          clearInterval(installCheckInterval);
+          installCheckInterval = null;
+        }
+      }
+      
+      // After 5 seconds (10 checks), show button anyway for Samsung Internet
+      if (checkCount >= 10 && !installButtonEl) {
+        console.log("No beforeinstallprompt after 5 seconds - showing manual install button for Samsung Internet");
+        
+        // Check if manifest exists
+        if (manifestLink) {
+          const btn = createInstallButton();
+          btn.style.display = "block";
+          
+          // Modify button to show manual instructions if prompt not available
+          btn.onclick = async () => {
+            if (deferredInstallPrompt) {
+              // Use the actual prompt if available
+              btn.disabled = true;
+              btn.textContent = "Installing...";
+              try {
+                await deferredInstallPrompt.prompt();
+                const { outcome } = await deferredInstallPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                if (outcome === 'accepted') {
+                  btn.textContent = "Installed!";
+                  setTimeout(() => {
+                    btn.remove();
+                    installButtonEl = null;
+                  }, 1500);
+                } else {
+                  btn.textContent = "Install Meditrack";
+                  btn.disabled = false;
+                }
+                deferredInstallPrompt = null;
+              } catch (error) {
+                console.error("Error:", error);
+                btn.textContent = "Install Meditrack";
+                btn.disabled = false;
+              }
+            } else {
+              // Show manual installation instructions
+              const message = `To install Meditrack:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
+              alert(message);
+            }
+          };
+        }
+        
+        if (installCheckInterval) {
+          clearInterval(installCheckInterval);
+          installCheckInterval = null;
+        }
+      }
+    }, 500);
+  } else {
+    // For other browsers, just wait a bit
     setTimeout(() => {
       if (deferredInstallPrompt && !installButtonEl) {
         const btn = createInstallButton();
         btn.style.display = "block";
       }
     }, 1000);
-  });
-}
+  }
+});

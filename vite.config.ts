@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: "autoUpdate",
+        injectRegister: 'auto',
         includeAssets: ['Appiconandlogo.jpg'],
         manifest: {
           id: "/",
@@ -76,6 +77,8 @@ export default defineConfig(({ mode }) => {
           ]
         },
         workbox: {
+          clientsClaim: true,
+          skipWaiting: true,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff2}'],
           runtimeCaching: [
             {

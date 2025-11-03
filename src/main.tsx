@@ -103,7 +103,11 @@ function createInstallButton() {
         installButtonEl.disabled = true;
         installButtonEl.textContent = "Preparing install...";
       }
-      // Aggressive short polling for prompt (up to ~9s)
+      // Wait for service worker to be ready (improves installability checks)
+      if ('serviceWorker' in navigator) {
+        try { await navigator.serviceWorker.ready; } catch {}
+      }
+      // Aggressive short polling for prompt (up to ~20s)
       let attempts = 0;
       const clickPoll = setInterval(async () => {
         attempts++;
@@ -133,7 +137,7 @@ function createInstallButton() {
             clearInterval(clickPoll);
           }
         }
-        if (attempts >= 30) {
+        if (attempts >= 66) { // ~20s @ 300ms
           clearInterval(clickPoll);
           if (installButtonEl) {
             installButtonEl.textContent = "Install Meditrack";
@@ -143,6 +147,33 @@ function createInstallButton() {
           alert(message);
         }
       }, 300);
+      // Also retry when returning to the tab (visibility change can flush the event)
+      const visHandler = async () => {
+        if (document.visibilityState === 'visible' && deferredInstallPrompt && installButtonEl) {
+          try {
+            installButtonEl.disabled = true;
+            installButtonEl.textContent = "Installing...";
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            console.log(`User response to install prompt (visibility): ${outcome}`);
+            if (outcome === 'accepted') {
+              installButtonEl.textContent = "Installed!";
+              setTimeout(() => {
+                installButtonEl?.remove();
+                installButtonEl = null;
+              }, 1500);
+            } else {
+              installButtonEl.textContent = "Install Meditrack";
+              installButtonEl.disabled = false;
+            }
+            deferredInstallPrompt = null;
+            document.removeEventListener('visibilitychange', visHandler);
+          } catch {
+            document.removeEventListener('visibilitychange', visHandler);
+          }
+        }
+      };
+      document.addEventListener('visibilitychange', visHandler);
       return;
     }
 

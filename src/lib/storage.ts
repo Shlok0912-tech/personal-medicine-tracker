@@ -185,6 +185,30 @@ export const storage = {
     return entry;
   },
 
+  // Add a medicine log with provided timestamp (for CSV import)
+  async addMedicineLogWithTimestamp(entry: Omit<MedicineLog, 'id'>): Promise<MedicineLog> {
+    const logs = readMap<MedicineLog>(KEYS.medicineLogs);
+    const id = generateId('admin');
+    const record: MedicineLog = { id, ...entry };
+    logs[id] = record;
+    writeMap(KEYS.medicineLogs, logs);
+    // Also create a stock record for administration to keep stock in sync
+    const meds = readMap<Medicine>(KEYS.medicines);
+    const med = meds[entry.medicineId];
+    const previousStock = med?.currentStock ?? 0;
+    const quantityChanged = -Math.abs(entry.quantity || 0);
+    const newStock = Math.max(0, previousStock + quantityChanged);
+    await storage.addStockRecord({
+      medicineId: entry.medicineId,
+      operation: 'administration',
+      quantityChanged,
+      previousStock,
+      newStock,
+      notes: entry.notes,
+    });
+    return record;
+  },
+
   async deleteMedicineLog(id: string): Promise<void> {
     const map = readMap<MedicineLog>(KEYS.medicineLogs);
     if (map[id]) delete map[id];
@@ -202,6 +226,16 @@ export const storage = {
     const id = generateId('glucose');
     const timestamp = new Date().toISOString();
     const record: GlucoseReading = { id, timestamp, unit: 'mg/dL', measurementType: 'random', ...reading };
+    map[id] = record;
+    writeMap(KEYS.glucoseReadings, map);
+    return record;
+  },
+
+  // Add a glucose reading with provided timestamp (for CSV import)
+  async addGlucoseReadingWithTimestamp(entry: Omit<GlucoseReading, 'id'>): Promise<GlucoseReading> {
+    const map = readMap<GlucoseReading>(KEYS.glucoseReadings);
+    const id = generateId('glucose');
+    const record: GlucoseReading = { id, unit: 'mg/dL', measurementType: 'random', ...entry };
     map[id] = record;
     writeMap(KEYS.glucoseReadings, map);
     return record;

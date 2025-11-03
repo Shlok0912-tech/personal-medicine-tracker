@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MedicineLog, GlucoseReading } from "@/lib/storage";
+import { exportMedicineLogsCsv, exportGlucoseCsv, importMedicineLogsCsv, importGlucoseCsv } from "@/lib/backup";
 import { Clock, Pill, Droplets, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +34,17 @@ export const HistoryTab = ({ medicineLogs, glucoseReadings, onDeleteGlucose, onD
       </div>
       
       <TabsContent value="medicine" className="space-y-4">
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportMedicineLogsCsv()}>Export CSV</Button>
+          <input id="import-medicine-logs" type="file" accept=".csv,text/csv" className="hidden" onChange={async (e) => {
+            const file = e.currentTarget.files?.[0];
+            if (!file) return;
+            await importMedicineLogsCsv(file);
+            // Simple reload to reflect imported data
+            window.location.reload();
+          }} />
+          <Button variant="secondary" size="sm" onClick={() => document.getElementById('import-medicine-logs')?.click()}>Import CSV</Button>
+        </div>
         {medicineLogs.length === 0 ? (
           <Card>
             <CardContent className="pt-6">
@@ -80,6 +92,16 @@ export const HistoryTab = ({ medicineLogs, glucoseReadings, onDeleteGlucose, onD
       </TabsContent>
       
       <TabsContent value="glucose" className="space-y-4">
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportGlucoseCsv()}>Export CSV</Button>
+          <input id="import-glucose" type="file" accept=".csv,text/csv" className="hidden" onChange={async (e) => {
+            const file = e.currentTarget.files?.[0];
+            if (!file) return;
+            await importGlucoseCsv(file);
+            window.location.reload();
+          }} />
+          <Button variant="secondary" size="sm" onClick={() => document.getElementById('import-glucose')?.click()}>Import CSV</Button>
+        </div>
         {glucoseReadings.length === 0 ? (
           <Card>
             <CardContent className="pt-6">

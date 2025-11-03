@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Activity, History } from "lucide-react";
 import { storage, Medicine, MedicineLog, GlucoseReading, isLocalStorageAvailable } from "@/lib/storage";
-import { downloadCsvExport } from "@/lib/backup";
+import { exportMedicinesCsv, importMedicinesCsv } from "@/lib/backup";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { ReportsPanel } from "@/components/ReportsPanel";
 import { showNotification } from "@/lib/notification";
@@ -251,14 +251,7 @@ const Index = () => {
                 Meditrack
               </span>
             </h1>
-            <div className="flex-1 flex justify-end">
-              <button
-                className="text-xs sm:text-sm px-3 py-1 rounded-md border hover:bg-accent/10"
-                onClick={() => downloadCsvExport()}
-              >
-                Export CSV
-              </button>
-            </div>
+            <div className="flex-1" />
           </div>
           <p className="text-muted-foreground">
             Track your medicines and glucose levels
@@ -301,7 +294,7 @@ const Index = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
                 <h2 className="text-xl sm:text-2xl font-semibold">Medicine Inventory</h2>
-                <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                   <Select value={scheduleFilter} onValueChange={(v) => setScheduleFilter(v as any)}>
                     <SelectTrigger className="w-[160px] sm:w-[210px]">
                       <SelectValue placeholder="Filter by schedule" />
@@ -323,6 +316,24 @@ const Index = () => {
                     onUpdate={handleUpdateMedicine}
                     onClose={() => setEditMedicineForDialog(null)}
                   />
+                <button
+                  className="text-xs sm:text-sm px-3 py-1 rounded-md border hover:bg-accent/10"
+                  onClick={() => exportMedicinesCsv()}
+                >
+                  Export CSV
+                </button>
+                <input id="import-medicines" type="file" accept=".csv,text/csv" className="hidden" onChange={async (e) => {
+                  const file = e.currentTarget.files?.[0];
+                  if (!file) return;
+                  await importMedicinesCsv(file);
+                  window.location.reload();
+                }} />
+                <button
+                  className="text-xs sm:text-sm px-3 py-1 rounded-md border hover:bg-accent/10"
+                  onClick={() => document.getElementById('import-medicines')?.click()}
+                >
+                  Import CSV
+                </button>
                 </div>
               </div>
 

@@ -121,4 +121,152 @@ export async function downloadCsvExport(): Promise<void> {
   );
 }
 
+// --- CSV helpers per section ---
+
+function parseCsv(text: string): { headers: string[]; rows: Array<Record<string, string>> } {
+  const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.length > 0);
+  if (lines.length === 0) return { headers: [], rows: [] };
+  const parseLine = (line: string): string[] => {
+    const out: string[] = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (line[i + 1] === '"') { cur += '"'; i++; } else { inQuotes = false; }
+        } else {
+          cur += ch;
+        }
+      } else {
+        if (ch === '"') { inQuotes = true; }
+        else if (ch === ',') { out.push(cur); cur = ''; }
+        else { cur += ch; }
+      }
+    }
+    out.push(cur);
+    return out;
+  };
+  const headers = parseLine(lines[0]);
+  const rows = lines.slice(1).map(l => {
+    const vals = parseLine(l);
+    const obj: Record<string, string> = {};
+    headers.forEach((h, idx) => { obj[h] = vals[idx] ?? ''; });
+    return obj;
+  });
+  return { headers, rows };
+}
+
+export async function exportMedicinesCsv(): Promise<void> {
+  const medicines = await storage.getMedicines();
+  downloadTextFile(
+    'medicines.csv',
+    toCsv(
+      ['name', 'totalStock', 'currentStock', 'dosage', 'notes'],
+      medicines.map(m => ({
+        name: m.name,
+        totalStock: m.totalStock,
+        currentStock: m.currentStock,
+        dosage: m.dosage,
+        notes: m.notes ?? ''
+      })) as any
+    )
+  );
+}
+
+export async function exportMedicineLogsCsv(): Promise<void> {
+  const logs = await storage.getMedicineLogs();
+  downloadTextFile(
+    'medicine_logs.csv',
+    toCsv(
+      ['medicineName', 'quantity', 'timestamp', 'notes'],
+      logs.map(l => ({
+        medicineName: l.medicineName,
+        quantity: l.quantity,
+        timestamp: l.timestamp,
+        notes: l.notes ?? ''
+      })) as any
+    )
+  );
+}
+
+export async function exportGlucoseCsv(): Promise<void> {
+  const readings = await storage.getGlucoseReadings();
+  downloadTextFile(
+    'glucose_readings.csv',
+    toCsv(
+      ['value', 'timestamp', 'notes', 'unit', 'measurementType'],
+      readings.map(r => ({
+        value: r.value,
+        timestamp: r.timestamp,
+        notes: r.notes ?? '',
+        unit: r.unit ?? 'mg/dL',
+        measurementType: r.measurementType ?? 'random'
+      })) as any
+    )
+  );
+}
+
+export async function importMedicinesCsv(file: File): Promise<number> {
+  const text = await file.text();
+  const { rows } = parseCsv(text);
+  let count = 0;
+  // Upsert by name
+  const existing = await storage.getMedicines();
+  const byName = new Map(existing.map(m => [m.name.toLowerCase(), m]));
+  for (const r of rows) {
+    const name = (r['name'] || '').trim();
+    if (!name) continue;
+    const totalStock = Number(r['totalStock'] || '0') || 0;
+    const currentStock = Number(r['currentStock'] || '0') || 0;
+    const dosage = (r['dosage'] || '').trim();
+    const notes = (r['notes'] || '').trim() || undefined;
+    const existingMed = byName.get(name.toLowerCase());
+    if (existingMed) {
+      await storage.updateMedicine(existingMed.id, { totalStock, currentStock, dosage, notes });
+      count++;
+    } else {
+      await storage.addMedicine({ name, totalStock, currentStock, dosage, notes });
+      count++;
+    }
+  }
+  return count;
+}
+
+export async function importMedicineLogsCsv(file: File): Promise<number> {
+  const text = await file.text();
+  const { rows } = parseCsv(text);
+  let count = 0;
+  const meds = await storage.getMedicines();
+  const byName = new Map(meds.map(m => [m.name.toLowerCase(), m]));
+  for (const r of rows) {
+    const medicineName = (r['medicineName'] || '').trim();
+    const med = byName.get(medicineName.toLowerCase());
+    if (!med) continue;
+    const quantity = Number(r['quantity'] || '0') || 0;
+    const timestamp = (r['timestamp'] || '').trim() || new Date().toISOString();
+    const notes = (r['notes'] || '').trim() || undefined;
+    await storage.addMedicineLogWithTimestamp({ medicineId: med.id, medicineName, quantity, timestamp, notes });
+    count++;
+  }
+  return count;
+}
+
+export async function importGlucoseCsv(file: File): Promise<number> {
+  const text = await file.text();
+  const { rows } = parseCsv(text);
+  let count = 0;
+  for (const r of rows) {
+    const value = Number(r['value'] || '0');
+    if (!isFinite(value)) continue;
+    const timestamp = (r['timestamp'] || '').trim() || new Date().toISOString();
+    const notes = (r['notes'] || '').trim() || undefined;
+    const unit = ((r['unit'] || '').trim() as any) || 'mg/dL';
+    const measurementType = ((r['measurementType'] || '').trim() as any) || 'random';
+    await storage.addGlucoseReadingWithTimestamp({ value, timestamp, notes, unit, measurementType });
+    count++;
+  }
+  return count;
+}
+
 

@@ -64,41 +64,48 @@ function createInstallButton() {
   });
   
   btn.onclick = async () => {
-    if (!deferredInstallPrompt) {
-      console.log("Install prompt not available");
-      return;
-    }
-    
-    btn.disabled = true;
-    btn.textContent = "Installing...";
-    
-    try {
-      // Show the install prompt
-      deferredInstallPrompt.prompt();
-      
-      // Wait for user's response
-      const { outcome } = await deferredInstallPrompt.userChoice;
-      
-      console.log(`User response to install prompt: ${outcome}`);
-      
-      if (outcome === 'accepted') {
-        btn.textContent = "Installed!";
-        setTimeout(() => {
-          btn.remove();
-          installButtonEl = null;
-        }, 1500);
-      } else {
+    if (deferredInstallPrompt) {
+      btn.disabled = true;
+      btn.textContent = "Installing...";
+      try {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        if (outcome === 'accepted') {
+          btn.textContent = "Installed!";
+          setTimeout(() => {
+            btn.remove();
+            installButtonEl = null;
+          }, 1500);
+        } else {
+          btn.textContent = "Install Meditrack";
+          btn.disabled = false;
+        }
+        deferredInstallPrompt = null;
+      } catch (error) {
+        console.error("Error showing install prompt:", error);
         btn.textContent = "Install Meditrack";
         btn.disabled = false;
       }
-      
-      // Clear the deferred prompt
-      deferredInstallPrompt = null;
-    } catch (error) {
-      console.error("Error showing install prompt:", error);
-      btn.textContent = "Install Meditrack";
-      btn.disabled = false;
+      return;
     }
+
+    // No prompt available yet: show platform-specific guidance and remember click for Samsung
+    if (isIOSSafari()) {
+      const message = `To install Meditrack on iOS:\n\n1. Tap the Share button (square with an up arrow)\n2. Scroll and tap "Add to Home Screen"\n3. Tap Add`;
+      alert(message);
+      return;
+    }
+
+    if (isSamsungInternet()) {
+      pendingInstallClick = true;
+      const message = `Preparing install... If nothing appears:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
+      alert(message);
+      return;
+    }
+
+    // Generic guidance
+    alert('If no install prompt appears, use your browser menu and select "Install app" or "Add to Home screen".');
   };
   
   document.body.appendChild(btn);
@@ -185,6 +192,10 @@ window.addEventListener("load", () => {
     console.log("App is already installed");
     return;
   }
+
+  // Always show the install button when not installed
+  const btn = createInstallButton();
+  btn.style.display = "block";
   
   // For Samsung Internet, wait a bit longer and check if prompt became available
   if (isSamsungInternet()) {
@@ -256,25 +267,11 @@ window.addEventListener("load", () => {
       }
     }, 500);
   } else {
-    // For non-Samsung browsers
-    if (isIOSSafari()) {
-      // iOS Safari: show manual Add to Home Screen guidance if not installed
-      if (!isInstalled() && !installButtonEl) {
-        const btn = createInstallButton();
-        btn.style.display = "block";
-        btn.onclick = () => {
-          const message = `To install Meditrack on iOS:\n\n1. Tap the Share button (square with an up arrow)\n2. Scroll and tap "Add to Home Screen"\n3. Tap Add`;
-          alert(message);
-        };
+    // Other browsers: keep button visible; optionally wait to reveal prompt
+    setTimeout(() => {
+      if (deferredInstallPrompt && installButtonEl) {
+        // nothing to do; click will trigger prompt
       }
-    } else {
-      // Other browsers: wait a bit for beforeinstallprompt
-      setTimeout(() => {
-        if (deferredInstallPrompt && !installButtonEl) {
-          const btn = createInstallButton();
-          btn.style.display = "block";
-        }
-      }, 1000);
-    }
+    }, 1000);
   }
 });

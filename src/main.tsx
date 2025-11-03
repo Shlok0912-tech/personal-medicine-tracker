@@ -7,12 +7,21 @@ createRoot(document.getElementById("root")!).render(<App />);
 // Install prompt UX - Only show button when install prompt is available
 let deferredInstallPrompt: any = null;
 let installButtonEl: HTMLButtonElement | null = null;
+let pendingInstallClick = false;
 
 // Detect Samsung Internet browser
 const isSamsungInternet = () => {
   const ua = navigator.userAgent;
   return /SamsungBrowser/i.test(ua) || 
          /Samsung/i.test(ua) && /Mobile/i.test(ua);
+};
+
+// Detect iOS Safari (no beforeinstallprompt support)
+const isIOSSafari = () => {
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+  return isIOS && isSafari;
 };
 
 // Check if app is already installed
@@ -118,6 +127,35 @@ window.addEventListener("beforeinstallprompt", (e: Event) => {
   btn.style.display = "block";
   
   console.log("Install prompt available - button shown");
+
+  // If user already clicked install (e.g., Samsung Internet late event), prompt immediately
+  if (pendingInstallClick && deferredInstallPrompt) {
+    pendingInstallClick = false;
+    (async () => {
+      try {
+        btn.disabled = true;
+        btn.textContent = "Installing...";
+        await (deferredInstallPrompt as any).prompt();
+        const { outcome } = await (deferredInstallPrompt as any).userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        if (outcome === 'accepted') {
+          btn.textContent = "Installed!";
+          setTimeout(() => {
+            btn.remove();
+            installButtonEl = null;
+          }, 1500);
+        } else {
+          btn.textContent = "Install Meditrack";
+          btn.disabled = false;
+        }
+        deferredInstallPrompt = null;
+      } catch (err) {
+        console.error('Error during immediate prompt after pending click', err);
+        btn.textContent = "Install Meditrack";
+        btn.disabled = false;
+      }
+    })();
+  }
 });
 
 // Hide button if app gets installed
@@ -203,8 +241,9 @@ window.addEventListener("load", () => {
                 btn.disabled = false;
               }
             } else {
-              // Show manual installation instructions
-              const message = `To install Meditrack:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
+              // Remember click and show guidance; auto-prompt when event arrives
+              pendingInstallClick = true;
+              const message = `Preparing install... If nothing appears:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
               alert(message);
             }
           };
@@ -217,12 +256,25 @@ window.addEventListener("load", () => {
       }
     }, 500);
   } else {
-    // For other browsers, just wait a bit
-    setTimeout(() => {
-      if (deferredInstallPrompt && !installButtonEl) {
+    // For non-Samsung browsers
+    if (isIOSSafari()) {
+      // iOS Safari: show manual Add to Home Screen guidance if not installed
+      if (!isInstalled() && !installButtonEl) {
         const btn = createInstallButton();
         btn.style.display = "block";
+        btn.onclick = () => {
+          const message = `To install Meditrack on iOS:\n\n1. Tap the Share button (square with an up arrow)\n2. Scroll and tap "Add to Home Screen"\n3. Tap Add`;
+          alert(message);
+        };
       }
-    }, 1000);
+    } else {
+      // Other browsers: wait a bit for beforeinstallprompt
+      setTimeout(() => {
+        if (deferredInstallPrompt && !installButtonEl) {
+          const btn = createInstallButton();
+          btn.style.display = "block";
+        }
+      }, 1000);
+    }
   }
 });

@@ -49,18 +49,16 @@ export default defineConfig(({ mode }) => {
             {
               src: "/Appiconandlogo.jpg",
               sizes: "192x192",
-              type: "image/jpeg",
-              purpose: "any"
+              type: "image/jpeg"
             },
             {
               src: "/Appiconandlogo.jpg",
               sizes: "512x512",
-              type: "image/jpeg",
-              purpose: "any"
+              type: "image/jpeg"
             },
             {
               src: "/Appiconandlogo.jpg",
-              sizes: "any",
+              sizes: "512x512",
               type: "image/jpeg",
               purpose: "maskable"
             }

@@ -99,8 +99,10 @@ function createInstallButton() {
 
     if (isSamsungInternet()) {
       pendingInstallClick = true;
-      const message = `Preparing install... If nothing appears:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
-      alert(message);
+      if (installButtonEl) {
+        installButtonEl.disabled = true;
+        installButtonEl.textContent = "Preparing install...";
+      }
       // Aggressive short polling for prompt (up to ~9s)
       let attempts = 0;
       const clickPoll = setInterval(async () => {
@@ -133,6 +135,12 @@ function createInstallButton() {
         }
         if (attempts >= 30) {
           clearInterval(clickPoll);
+          if (installButtonEl) {
+            installButtonEl.textContent = "Install Meditrack";
+            installButtonEl.disabled = false;
+          }
+          const message = `If the install sheet didn't appear:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
+          alert(message);
         }
       }, 300);
       return;

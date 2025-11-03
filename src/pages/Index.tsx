@@ -28,6 +28,34 @@ const Index = () => {
   const [scheduleFilter, setScheduleFilter] = useState<"all" | NonNullable<Medicine["schedule"]>>("all");
   const [editMedicineForDialog, setEditMedicineForDialog] = useState<Medicine | null>(null);
 
+  const deriveSchedule = (m: Medicine): Medicine["schedule"] | undefined => {
+    if (m.schedule) return m.schedule;
+    const text = `${m.dosage || ''} ${m.notes || ''}`.toLowerCase();
+    const hasMorning = /\b(morning|breakfast|am)\b/.test(text);
+    const hasNoon = /\b(noon|lunch|afternoon|midday)\b/.test(text);
+    const hasNight = /\b(night|evening|dinner|bed\s*time|pm)\b/.test(text);
+    if (/\b(thrice|3\s*times|three\s*times)\b/.test(text)) return 'three_times';
+    if (/\b(twice|2\s*times|two\s*times|bid)\b/.test(text)) return 'morning_night';
+    if (hasMorning && hasNoon && hasNight) return 'three_times';
+    if (hasMorning && hasNoon) return 'morning_noon';
+    if (hasMorning && hasNight) return 'morning_night';
+    if (hasNoon && hasNight) return 'noon_night';
+    if (hasMorning) return 'morning';
+    if (hasNoon) return 'noon';
+    if (hasNight) return 'night';
+    return undefined;
+  };
+
+  const matchesScheduleFilter = (m: Medicine, filter: typeof scheduleFilter): boolean => {
+    if (filter === 'all') return true;
+    const s = m.schedule ?? deriveSchedule(m);
+    if (!s) return false;
+    if (filter === 'morning') return s === 'morning' || s === 'morning_noon' || s === 'morning_night' || s === 'three_times';
+    if (filter === 'noon') return s === 'noon' || s === 'morning_noon' || s === 'noon_night' || s === 'three_times';
+    if (filter === 'night') return s === 'night' || s === 'morning_night' || s === 'noon_night' || s === 'three_times';
+    return true;
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -294,22 +322,15 @@ const Index = () => {
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
                 <h2 className="text-xl sm:text-2xl font-semibold">Medicine Inventory</h2>
-              <div className="flex items-center gap-2 flex-wrap">
-                  <Select value={scheduleFilter} onValueChange={(v) => setScheduleFilter(v as any)}>
-                    <SelectTrigger className="w-[160px] sm:w-[210px]">
-                      <SelectValue placeholder="Filter by schedule" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Schedules</SelectItem>
-                      <SelectItem value="morning">Only Morning</SelectItem>
-                      <SelectItem value="noon">Only Noon</SelectItem>
-                      <SelectItem value="night">Only Night</SelectItem>
-                      <SelectItem value="morning_noon">Morning and Noon</SelectItem>
-                      <SelectItem value="morning_night">Morning and Night</SelectItem>
-                      <SelectItem value="noon_night">Noon and Night</SelectItem>
-                      <SelectItem value="three_times">3 times</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Tabs value={scheduleFilter} onValueChange={(v) => setScheduleFilter(v as any)}>
+                    <TabsList className="grid grid-cols-4">
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="morning">Morning</TabsTrigger>
+                      <TabsTrigger value="noon">Noon</TabsTrigger>
+                      <TabsTrigger value="night">Night</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                   <AddMedicineDialog 
                     onAdd={handleAddMedicine} 
                     editMedicine={editMedicineForDialog || undefined}
@@ -344,7 +365,7 @@ const Index = () => {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {medicines
-                    .filter(m => scheduleFilter === 'all' || (m.schedule ?? 'all') === scheduleFilter)
+                    .filter(m => matchesScheduleFilter(m, scheduleFilter))
                     .map((medicine) => (
                     <MedicineCard
                       key={medicine.id}

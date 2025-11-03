@@ -101,6 +101,40 @@ function createInstallButton() {
       pendingInstallClick = true;
       const message = `Preparing install... If nothing appears:\n\n1. Tap the menu button (⋮) at the top right\n2. Select "Add page to"\n3. Choose "Home screen"\n\nOr look for the install icon in the address bar.`;
       alert(message);
+      // Aggressive short polling for prompt (up to ~9s)
+      let attempts = 0;
+      const clickPoll = setInterval(async () => {
+        attempts++;
+        if (deferredInstallPrompt && installButtonEl) {
+          try {
+            installButtonEl.disabled = true;
+            installButtonEl.textContent = "Installing...";
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            console.log(`User response to install prompt (clickPoll): ${outcome}`);
+            if (outcome === 'accepted') {
+              installButtonEl.textContent = "Installed!";
+              setTimeout(() => {
+                installButtonEl?.remove();
+                installButtonEl = null;
+              }, 1500);
+            } else {
+              installButtonEl.textContent = "Install Meditrack";
+              installButtonEl.disabled = false;
+            }
+            deferredInstallPrompt = null;
+            clearInterval(clickPoll);
+          } catch (err) {
+            console.error('Samsung click polling prompt error', err);
+            installButtonEl.textContent = "Install Meditrack";
+            installButtonEl.disabled = false;
+            clearInterval(clickPoll);
+          }
+        }
+        if (attempts >= 30) {
+          clearInterval(clickPoll);
+        }
+      }, 300);
       return;
     }
 

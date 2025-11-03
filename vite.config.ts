@@ -42,6 +42,7 @@ export default defineConfig(({ mode }) => {
           theme_color: "#4CAF50",
           background_color: "#ffffff",
           display: "standalone",
+          display_override: ["standalone", "minimal-ui"],
           orientation: "portrait",
           scope: "/",
           start_url: "/",
@@ -49,6 +50,16 @@ export default defineConfig(({ mode }) => {
             {
               src: "/Appiconandlogo.jpg",
               sizes: "192x192",
+              type: "image/jpeg"
+            },
+            {
+              src: "/Appiconandlogo.jpg",
+              sizes: "256x256",
+              type: "image/jpeg"
+            },
+            {
+              src: "/Appiconandlogo.jpg",
+              sizes: "384x384",
               type: "image/jpeg"
             },
             {

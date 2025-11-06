@@ -13,6 +13,8 @@ import { AddGlucoseDialog } from "@/components/AddGlucoseDialog";
 import { HistoryTab } from "@/components/HistoryTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import DosageCalculator from "@/components/DosageCalculator";
 
@@ -27,6 +29,10 @@ const Index = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [scheduleFilter, setScheduleFilter] = useState<"all" | NonNullable<Medicine["schedule"]>>("all");
   const [editMedicineForDialog, setEditMedicineForDialog] = useState<Medicine | null>(null);
+  const [lowStockSearch, setLowStockSearch] = useState("");
+  const [lowStockSort, setLowStockSort] = useState<"percent_desc" | "percent_asc" | "name">("percent_desc");
+  const [refillForId, setRefillForId] = useState<string | null>(null);
+  const [refillQuantity, setRefillQuantity] = useState<number>(0);
 
   const deriveSchedule = (m: Medicine): Medicine["schedule"] | undefined => {
     if (m.schedule) return m.schedule;
@@ -268,6 +274,21 @@ const Index = () => {
     }
   };
 
+  const handleRefill = async (medicine: Medicine, quantity: number) => {
+    if (!quantity || quantity <= 0) return;
+    try {
+      await storage.updateMedicine(medicine.id, { currentStock: medicine.currentStock + quantity, totalStock: Math.max(medicine.totalStock, medicine.currentStock + quantity) });
+      const updatedMedicines = await storage.getMedicines();
+      setMedicines(updatedMedicines);
+      setRefillForId(null);
+      setRefillQuantity(0);
+      toast({ title: "Stock Refilled", description: `${medicine.name} increased by ${quantity}.` });
+    } catch (error) {
+      console.error('Error refilling medicine:', error);
+      toast({ title: 'Error', description: 'Failed to refill stock.', variant: 'destructive' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container max-w-6xl py-6 sm:py-8 px-4 space-y-6 sm:space-y-8">
@@ -288,7 +309,7 @@ const Index = () => {
 
         <Tabs defaultValue="dashboard" className="space-y-6">
           <div className="w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide">
-            <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:grid sm:grid-cols-4 gap-1 sm:gap-2">
+            <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:grid sm:grid-cols-5 gap-1 sm:gap-2">
               <TabsTrigger value="dashboard" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
                 <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="text-xs sm:text-sm">Dashboard</span>
@@ -302,6 +323,9 @@ const Index = () => {
               </TabsTrigger>
               <TabsTrigger value="calculator" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
                 <span className="text-xs sm:text-sm">Calculator</span>
+              </TabsTrigger>
+              <TabsTrigger value="low-stock" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
+                <span className="text-xs sm:text-sm">Low Stock</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0 px-3 sm:px-3">
                 <span className="text-xs sm:text-sm">Settings</span>
@@ -370,6 +394,7 @@ const Index = () => {
                     <MedicineCard
                       key={medicine.id}
                       medicine={medicine}
+                      lowStockThreshold={lowStockThreshold}
                       onTake={handleTakeMedicine}
                       onEdit={(med) => {
                         setEditMedicineForDialog(med);
@@ -405,11 +430,101 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="reports">
-            <ReportsPanel medicineLogs={medicineLogs} glucoseReadings={glucoseReadings} />
+            <ReportsPanel glucoseReadings={glucoseReadings} />
           </TabsContent>
 
           <TabsContent value="calculator">
             <DosageCalculator medicines={medicines} />
+          </TabsContent>
+
+          <TabsContent value="low-stock">
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <h2 className="text-xl sm:text-2xl font-semibold">Low Stock</h2>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Input
+                    placeholder="Search medicine..."
+                    value={lowStockSearch}
+                    onChange={(e) => setLowStockSearch(e.target.value)}
+                  />
+                  <Select value={lowStockSort} onValueChange={(v) => setLowStockSort(v as any)}>
+                    <SelectTrigger className="w-[180px]"><SelectValue placeholder="Sort by" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percent_desc">Lowest % first</SelectItem>
+                      <SelectItem value="percent_asc">Highest % first</SelectItem>
+                      <SelectItem value="name">Name</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {(() => {
+                const filtered = medicines
+                  .filter(m => m.totalStock > 0 && (m.currentStock / m.totalStock) * 100 < lowStockThreshold)
+                  .filter(m => m.name.toLowerCase().includes(lowStockSearch.toLowerCase().trim()));
+
+                const sorted = filtered.slice().sort((a, b) => {
+                  const pa = (a.currentStock / a.totalStock) * 100;
+                  const pb = (b.currentStock / b.totalStock) * 100;
+                  if (lowStockSort === 'percent_desc') return pa - pb;
+                  if (lowStockSort === 'percent_asc') return pb - pa;
+                  return a.name.localeCompare(b.name);
+                });
+
+                if (!sorted.length) {
+                  return <div className="text-sm text-muted-foreground">No medicines match your filters.</div>;
+                }
+
+                return (
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {sorted.map(m => {
+                      const pct = Math.max(0, Math.round((m.currentStock / m.totalStock) * 100));
+                      const critical = pct < Math.max(5, Math.floor(lowStockThreshold / 2));
+                      return (
+                        <div key={m.id} className="rounded-lg border p-4 space-y-3 bg-background">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className="font-medium">{m.name}</div>
+                              <div className="text-xs text-muted-foreground">{m.currentStock} of {m.totalStock} remaining</div>
+                            </div>
+                            <span className={`text-xs px-2 py-1 rounded-md border ${critical ? 'bg-destructive/10 text-destructive border-destructive/30' : 'bg-warning/10 text-warning-foreground border-warning/30'}`}>
+                              {pct}%
+                            </span>
+                          </div>
+
+                          <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all ${critical ? 'bg-destructive' : 'bg-primary'}`}
+                              style={{ width: `${Math.min(pct, 100)}%` }}
+                            />
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <Button size="sm" onClick={() => handleTakeMedicine(m)}>Take</Button>
+                            <Button size="sm" variant="secondary" onClick={() => { setRefillForId(m.id); setRefillQuantity(0); }}>Refill</Button>
+                          </div>
+
+                          {refillForId === m.id && (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="number"
+                                min={1}
+                                placeholder="Qty"
+                                value={refillQuantity || ''}
+                                onChange={(e) => setRefillQuantity(parseInt(e.target.value || '0') || 0)}
+                                className="w-28"
+                              />
+                              <Button size="sm" onClick={() => handleRefill(m, refillQuantity)} disabled={!refillQuantity || refillQuantity <= 0}>Add</Button>
+                              <Button size="sm" variant="ghost" onClick={() => { setRefillForId(null); setRefillQuantity(0); }}>Cancel</Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
           </TabsContent>
 
           <TabsContent value="settings">

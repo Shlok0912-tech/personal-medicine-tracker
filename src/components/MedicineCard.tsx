@@ -9,11 +9,13 @@ interface MedicineCardProps {
   onTake: (medicine: Medicine) => void;
   onEdit: (medicine: Medicine) => void;
   onDelete: (id: string) => void;
+  lowStockThreshold?: number;
 }
 
-export const MedicineCard = ({ medicine, onTake, onEdit, onDelete }: MedicineCardProps) => {
+export const MedicineCard = ({ medicine, onTake, onEdit, onDelete, lowStockThreshold }: MedicineCardProps) => {
   const stockPercentage = (medicine.currentStock / medicine.totalStock) * 100;
-  const isLowStock = stockPercentage < 20;
+  const threshold = typeof lowStockThreshold === 'number' ? lowStockThreshold : 20;
+  const isLowStock = stockPercentage < threshold;
   
   return (
     <Card className="overflow-hidden transition-all hover:shadow-[var(--shadow-card)]">
